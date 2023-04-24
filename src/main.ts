@@ -1,46 +1,43 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { defaultSettings, ClockifySettings } from "./settings";
-import { ClockifySettingsTab } from './settings-tab';
-import { ClockifyService } from './service';
-import { displayTracker, loadTracker } from "./tracker";
+import { Plugin } from 'obsidian'
+import { defaultSettings, ClockifySettings } from './settings'
+import { ClockifySettingsTab } from './settings-tab'
+import { ClockifyService } from './service'
+import { displayTracker, loadTracker } from './tracker'
 
 export default class ClockifyPlugin extends Plugin {
-	settings: ClockifySettings;
-	service: ClockifyService;
+	settings: ClockifySettings
+	service: ClockifyService
 
 	async onload() {
-		await this.loadSettings();
+		await this.loadSettings()
 
-		this.service = new ClockifyService(this, this.settings);
+		this.service = new ClockifyService(this, this.settings)
 
-		this.addSettingTab(new ClockifySettingsTab(this.app, this));
+		this.addSettingTab(new ClockifySettingsTab(this.app, this))
 
-		this.registerMarkdownCodeBlockProcessor("clockify-timer", (s, e, i) => {
+		this.registerMarkdownCodeBlockProcessor('clockify-timer', (s, e, i) => {
 
-			console.log("CLOCKIFY: - " + s);
+			console.log('CLOCKIFY: - ' + s)
 
-			let tracker = loadTracker(s);
-			e.empty();
-			displayTracker(this.service, tracker, e, () => i.getSectionInfo(e), this.settings);
-		});
+			const tracker = loadTracker(s)
+			e.empty()
+			displayTracker(this.service, tracker, e, () => i.getSectionInfo(e), this.settings)
+		})
 
 		this.addCommand({
-			id: `insert`,
-			name: `Insert Clockify Timer`,
-			editorCallback: (e, _) => {
-				e.replaceSelection("```clockify-timer\n```\n");
+			id: 'insert',
+			name: 'Insert Clockify Timer',
+			editorCallback: (e) => {
+				e.replaceSelection('```clockify-timer\n```\n')
 			}
-		});
-	}
-
-	onunload() {
+		})
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, defaultSettings, await this.loadData());
+		this.settings = Object.assign({}, defaultSettings, await this.loadData())
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(this.settings)
 	}
 }

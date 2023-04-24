@@ -1,41 +1,63 @@
-import { moment, requestUrl, RequestUrlParam, RequestUrlResponse } from "obsidian";
-import ClockifyPlugin from "./main";
-import { ClockifySettings } from "./settings";
-import { Tracker } from "./tracker";
+import { moment, requestUrl, RequestUrlParam, RequestUrlResponse } from 'obsidian'
+import ClockifyPlugin from './main'
+import { ClockifySettings } from './settings'
+import { Tracker } from './tracker'
+
+interface ClockifyProject {
+	color: string,
+	duration: any,
+	id: string,
+	memberships: any[],
+	name: string,
+	note: string,
+	public: boolean,
+	workspaceId: string
+}
+
+interface ClockifyClient {
+	id: string,
+	name: string,
+	page: number,
+	archived: boolean
+}
+
+interface ProjectQueryParams{
+	clients: string[]
+}
 
 export class ClockifyService {
-    app: ClockifyPlugin;
-    settings: ClockifySettings;
+    app: ClockifyPlugin
+    settings: ClockifySettings
 
-    timestampFormat: string = "YYYY-MM-DDTHH:mm:ss[Z]";
+    timestampFormat = 'YYYY-MM-DDTHH:mm:ss[Z]'
 
     constructor(app: ClockifyPlugin, settings: ClockifySettings) {
-        this.app = app;
-        this.settings = settings;
+        this.app = app
+        this.settings = settings
     }
 
     async saveTimer(tracker: Tracker): Promise<string> {
 
-        if(tracker.workspaceId == "" || tracker.projectId == "")
+        if(tracker.workspaceId == '' || tracker.projectId == '')
         {
-            let  workspaceId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces`, this.settings.workspace);
-            let  projectId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces/${workspaceId}/projects`, this.settings.project);
+            const  workspaceId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces`, this.settings.workspace)
+            const  projectId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces/${workspaceId}/projects`, this.settings.project)
 
-            tracker.workspaceId = workspaceId;
-            tracker.projectId = projectId;
+            tracker.workspaceId = workspaceId
+            tracker.projectId = projectId
         }
 
-        var url = `${this.settings.baseEndpoint}workspaces/${tracker.workspaceId}/time-entries`;
+        let url = `${this.settings.baseEndpoint}workspaces/${tracker.workspaceId}/time-entries`
 
         if(tracker.id != '') {
-            url = url + "/" + tracker.id;
+            url = url + '/' + tracker.id
         }
 
         //console.log("CLOCKIFY: " + url);
 
-        var startTime = moment.unix(tracker.start).format(this.timestampFormat); 
+        const startTime = moment.unix(tracker.start).format(this.timestampFormat) 
 
-        let json: string;
+        let json: string
 
         if(tracker.end == 0) {
 
@@ -46,7 +68,7 @@ export class ClockifyService {
             })
         }
         else {
-            var endTime = moment.unix(tracker.end).format(this.timestampFormat);
+            const endTime = moment.unix(tracker.end).format(this.timestampFormat)
             json = JSON.stringify({
                 start: startTime,
                 end: endTime,
@@ -57,51 +79,81 @@ export class ClockifyService {
 
         //console.log("CLOCKIFY: Body - " + json);
 
-        let method: string = tracker.id == "" ? "POST" : "PUT";
+        const method: string = tracker.id == '' ? 'POST' : 'PUT'
 
         const options: RequestUrlParam = { url: url, method: method, headers: { 'X-Api-Key': this.settings.apiToken, 'Content-Type': 'application/json' }, body: json }
 
         //console.log("CLOCKIFY: Options - " + JSON.stringify(options));
 
-        var response: RequestUrlResponse;
+        let response: RequestUrlResponse
 
         try
         {
-            response = await requestUrl(options);
+            response = await requestUrl(options)
 
-            return response.json.id;
+			return response.json.id
         }
         catch(e) {
-            console.log("CLOCKIFY: + " + JSON.stringify(e));
+            console.log('CLOCKIFY: + ' + JSON.stringify(e))
         }
 
-        return "";
+        return ''
     }
+
+	async listProjects(params?: ProjectQueryParams): Promise<ClockifyProject[]>{
+		const  workspaceId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces`, this.settings.workspace)
+		const query = params ? '?' + [params].map(param => param.clients.map(client => `clients=${client}`).join('&')).join('&') : ''
+		const url = `${this.settings.baseEndpoint}workspaces/${workspaceId}/projects${query}`
+		
+		const options: RequestUrlParam = { url: url, method: 'GET', headers: { 'X-Api-Key': this.settings.apiToken, 'Content-Type': 'application/json' } }
+		try {
+            const response = await requestUrl(options)
+			return response.json
+        }
+        catch(e) {
+            console.error('CLOCKIFY: + ' + JSON.stringify(e))
+        }
+	}
+
+	async listClients(params?: {name: string}): Promise<ClockifyClient[]>{
+		const  workspaceId = await this.getObjectId(`${this.settings.baseEndpoint}workspaces`, this.settings.workspace)
+		const query = params ? `?name=${params.name}` : ''
+		const url = `${this.settings.baseEndpoint}workspaces/${workspaceId}/clients${query}`
+		const options: RequestUrlParam = { url: url, method: 'GET', headers: { 'X-Api-Key': this.settings.apiToken, 'Content-Type': 'application/json' } }
+		
+		try {
+            const response = await requestUrl(options)
+			return response.json
+        }
+        catch(e) {
+            console.error('CLOCKIFY: + ' + JSON.stringify(e))
+        }
+	}
 
     async getObjectId(url: string, objectName: string) : Promise<string> {
 
-        const options: RequestUrlParam = { url: url, method: "GET", headers: {'X-Api-Key': this.settings.apiToken}}
+        const options: RequestUrlParam = { url: url, method: 'GET', headers: {'X-Api-Key': this.settings.apiToken}}
 
         //console.log("CLOCKIFY: GetObjectId - " + url);
 
         try
         {
-            const response = await requestUrl(options);
+            const response = await requestUrl(options)
 
-            for(var i = 0; i < response.json.length; i++) {
+            for(let i = 0; i < response.json.length; i++) {
                 
-                console.log("CLOCKIFY: Name - " + response.json[i].name);
+                console.log('CLOCKIFY: Name - ' + response.json[i].name)
                 
                 if(response.json[i].name == objectName)
                 {
-                    return response.json[i].id;
+                    return response.json[i].id
                 }
             }
         }
         catch(e) {
-            console.log("CLOCKIFY: + " + JSON.stringify(e));
+            console.log('CLOCKIFY: + ' + JSON.stringify(e))
         }
 
-        return "";
+        return ''
     }
 }
