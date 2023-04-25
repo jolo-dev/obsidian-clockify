@@ -5,38 +5,37 @@ import {  defaultSettings } from './settings'
 
 export class ClockifySettingsTab extends PluginSettingTab {
 
-    plugin: ClockifyPlugin
+	plugin: ClockifyPlugin
 
-    constructor(app: App, plugin: ClockifyPlugin) {
-        super(app, plugin)
-        this.plugin = plugin
-    }
+	constructor(app: App, plugin: ClockifyPlugin) {
+		super(app, plugin)
+		this.plugin = plugin
+	}
 
-    display() : void {
+	display() : void {
         
-        const {containerEl} = this
+		const {containerEl} = this
 
-        containerEl.empty()
+		containerEl.empty()
 		containerEl.createEl('h2', {text: 'Settings for Clockify plugin.'})
 
-        new Setting(containerEl)
-        .setName('Base Endpoint')
-        .setDesc('Base endpoint for Clockify - this may change based on the type of account you have with Clockify.')
-        .addText(text => text
-            .setPlaceholder('Enter the base endpoint.')
-            .setValue(this.plugin.settings.baseEndpoint)
-            .onChange(async (value) => {
-                console.log('BaseEndpoint: ' + value)
+		new Setting(containerEl)
+			.setName('Base Endpoint')
+			.setDesc('Base endpoint for Clockify - this may change based on the type of account you have with Clockify.')
+			.addText(text => text
+				.setPlaceholder('Enter the base endpoint.')
+				.setValue(this.plugin.settings.baseEndpoint)
+				.onChange(async (value) => {
+					console.log('BaseEndpoint: ' + value)
 
-                this.plugin.settings.baseEndpoint = value.length ? value : defaultSettings.baseEndpoint
+					this.plugin.settings.baseEndpoint = value.length ? value : defaultSettings.baseEndpoint
 
-                if(!this.plugin.settings.baseEndpoint.endsWith('/'))
-                {
-                    this.plugin.settings.baseEndpoint = this.plugin.settings.baseEndpoint + '/'
-                }
+					if(!this.plugin.settings.baseEndpoint.endsWith('/')) {
+						this.plugin.settings.baseEndpoint = this.plugin.settings.baseEndpoint + '/'
+					}
 
-                await this.plugin.saveSettings()
-            }))
+					await this.plugin.saveSettings()
+				}))
 
 		new Setting(containerEl)
 			.setName('API Token')
@@ -50,7 +49,7 @@ export class ClockifySettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings()
 				}))
 
-        new Setting(containerEl)
+		new Setting(containerEl)
 			.setName('Workspace Name')
 			.setDesc('Clockify workspace name')
 			.addText(text => text
@@ -61,6 +60,6 @@ export class ClockifySettingsTab extends PluginSettingTab {
 					this.plugin.settings.workspace = value
 					await this.plugin.saveSettings()
 				}))
-    }
+	}
 }
 

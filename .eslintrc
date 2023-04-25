@@ -23,6 +23,12 @@
 		"quotes": [
 			"error",
 			"single"
+		],
+		"curly": "error",
+		"brace-style": "error",
+		"indent": [
+			"error",
+			"tab"
 		]
 	}
 }

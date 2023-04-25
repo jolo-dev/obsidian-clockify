@@ -10,15 +10,10 @@ export default class ClockifyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings()
-
 		this.service = new ClockifyService(this, this.settings)
-
 		this.addSettingTab(new ClockifySettingsTab(this.app, this))
-
 		this.registerMarkdownCodeBlockProcessor('clockify-timer', (s, e, i) => {
-
 			console.log('CLOCKIFY: - ' + s)
-
 			const tracker = loadTracker(s)
 			e.empty()
 			displayTracker(this.service, tracker, e, () => i.getSectionInfo(e), this.settings)
@@ -27,8 +22,17 @@ export default class ClockifyPlugin extends Plugin {
 		this.addCommand({
 			id: 'insert',
 			name: 'Insert Clockify Timer',
+			
 			editorCallback: (e) => {
 				e.replaceSelection('```clockify-timer\n```\n')
+			}
+		})
+
+		this.addCommand({
+			id: 'show',
+			name: 'Show Clockify Timesheet',
+			editorCallback: (e) => {
+				e.replaceSelection('**This is bold** but this not\n')
 			}
 		})
 	}
